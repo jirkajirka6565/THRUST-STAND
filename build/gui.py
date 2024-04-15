@@ -1,4 +1,5 @@
 import serial #import pyserial
+import serial.tools.list_ports
 import time #import time library
 
 #tkinter designer imports
@@ -13,8 +14,31 @@ ASSETS_PATH = OUTPUT_PATH / Path(r"C:\Users\polis\Documents\Coding\Tkinter-Desig
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
 
+def get_ports():
+    ports = serial.tools.list_ports.comports()
+    return ports
+
+def FindArduino(portsFound):
+    comport = "no port"
+    numOfPorts = len(portsFound)
+
+    for i in range(0, numOfPorts):
+        port = portsFound[i]
+        strPort = str(port)
+
+        if "Arduino" in strPort:
+            splitPort = strPort.split(" ")
+            comport = splitPort[0]
+
+    return comport
+
+
+arduino_port = FindArduino(get_ports())
+print(arduino_port)
+
+
 try:
-    arduino = serial.Serial(port="/dev/ttyACM0", baudrate=9600, timeout=1) #select arduino port
+    arduino = serial.Serial(port=arduino_port, baudrate=9600, timeout=1) #select arduino port
 except:
     print("Port not found")
     exit()
