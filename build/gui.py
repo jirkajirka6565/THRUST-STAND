@@ -1,6 +1,5 @@
 import serial #import pyserial
 import time #import time library
-import matplotlib.pyplot as plt #import matplotlib
 
 #tkinter designer imports
 from pathlib import Path
@@ -14,8 +13,11 @@ ASSETS_PATH = OUTPUT_PATH / Path(r"C:\Users\polis\Documents\Coding\Tkinter-Desig
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
 
-
-arduino = serial.Serial(port="/dev/ttyACM0", baudrate=9600, timeout=1) #select arduino port
+try:
+    arduino = serial.Serial(port="/dev/ttyACM0", baudrate=9600, timeout=1) #select arduino port
+except:
+    print("Port not found")
+    exit()
 
 #define function for led on
 def TurnLedOn():
