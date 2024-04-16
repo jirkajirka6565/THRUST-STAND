@@ -3,8 +3,12 @@ import serial.tools.list_ports
 import time #import time library
 import tkinter
 from tkinter import *
+from tkinter import messagebox
 
+window = Tk()
 
+window.geometry("1280x720")
+window.configure(bg = "#463030")
 
 def get_ports():
     ports = serial.tools.list_ports.comports()
@@ -40,6 +44,8 @@ try:
     arduino = serial.Serial(port=arduino_port, baudrate=9600, timeout=1) #select arduino port
 except:
     print("Port not found")
+    messagebox.showerror("Error", "Arduino not found")
+    exit()
 
 #define function for led on
 def TurnLedOn():
@@ -50,11 +56,6 @@ def TurnLedOn():
 def TurnLedOff():
     arduino.write(b"0")
     print(arduino.readline().decode("utf-8"))
-
-window = Tk()
-
-window.geometry("1280x720")
-window.configure(bg = "#463030")
 
 
 canvas = Canvas(
