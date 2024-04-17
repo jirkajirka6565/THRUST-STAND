@@ -10,7 +10,18 @@ void setup() {
 
 void loop() {
   
-  while (!Serial.available()); 
+  while (!Serial.available())
+  {
+    if (x==1)
+    {
+      Serial.println("Led on");
+    }
+    else if (x==0)
+    {
+      Serial.println("Led off");
+    }
+    else{} 
+  } 
 	x = Serial.readString().toInt(); 
   if(x == 1)
   {

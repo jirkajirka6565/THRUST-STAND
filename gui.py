@@ -90,9 +90,6 @@ image_image_1 = PhotoImage(file="image_1.png")
 
 canvas.create_image(379.0, 360.0, image=image_image_1)
 
-graph = FigureCanvasTkAgg(fig, master=window)
-graph.get_tk_widget().place(x=650,y=100)
-
 button_image_1 = PhotoImage(
     file="button_1.png")
 button_1 = Button(
@@ -141,13 +138,13 @@ connectButton.place(
 
 def get_sensor_data():
     
-    receivedData = arduino.readline()
+    receivedData = np.random.randint(2)
 
     print(receivedData)
 
-    if receivedData == "Led on":
+    if receivedData == 1:
         data = 1
-    elif receivedData == "Led off":
+    elif receivedData == 0:
         data = 0
 
     return data
@@ -157,12 +154,19 @@ def init():
     return line,
 
 def animate(frame):
+    print("Frame:" + str(frame))
     x_data.append(frame)
     y_data.append(get_sensor_data())  # Get sensor data
     line.set_data(x_data, y_data)
+    if frame >= 100:
+        #ax.set_xlim(0, 100 + frame * 1)
+        ax.set_xlim(0, frame+1)
     return line,
 
-ani = FuncAnimation(fig, animate, frames=np.linspace(0, 100, 100), init_func=init, blit=True)
+graph = FigureCanvasTkAgg(fig, master=window)
+graph.get_tk_widget().place(x=650,y=100)
+
+ani = FuncAnimation(fig, animate, init_func=init, blit=False, interval=1000)
 plt.xlabel('Time')
 plt.ylabel('Sensor Data')
 plt.title('Real-time Sensor Data')
