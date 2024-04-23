@@ -1,5 +1,6 @@
 {
     "board": "arduino:avr:uno",
     "programmer": "avrisp",
-    "sketch": "myBlink/myBlink.ino"
+    "sketch": "myBlink/myBlink.ino",
+    "port": "/dev/ttyACM0"
 }

@@ -15,10 +15,12 @@ void loop() {
     if (x==1)
     {
       Serial.println("Led on");
+      delay(1000);
     }
     else if (x==0)
     {
       Serial.println("Led off");
+      delay(1000);
     }
     else{} 
   } 

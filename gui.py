@@ -9,6 +9,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.animation import FuncAnimation
 import numpy as np
 
+isArduinoAvail = False
+
 window = Tk()
 
 fig, ax = plt.subplots()
@@ -48,13 +50,14 @@ def FindArduino(portsFound):
     return comport
 
 def Connect():
-
+    global arduino_port
     arduino_port = FindArduino(get_ports())
     print(arduino_port)
     try:
         global arduino
         arduino = serial.Serial(port=arduino_port, baudrate=9600, timeout=1) #select arduino port
         messagebox.showinfo("Info", "Arduino connected successfully!")
+        isArduinoAvail = True
     except:
         print("Port not found")
         messagebox.showerror("Error", "Arduino not found")
@@ -138,18 +141,22 @@ connectButton.place(
 
 def get_sensor_data():
     
-    receivedData = np.random.randint(2)
+    
+    
+    receivedData = str(arduino.readline().decode("utf-8"))
 
+    
     print(receivedData)
 
-    if receivedData == 1:
+    if receivedData == "Led on":
         data = 1
-    elif receivedData == 0:
+    elif receivedData == "Led off":
         data = 0
-
+    else:
+        data = 0
     return data
 
-def init():
+""" def init():
     line.set_data([], [])
     return line,
 
@@ -170,7 +177,10 @@ ani = FuncAnimation(fig, animate, init_func=init, blit=False, interval=1000)
 plt.xlabel('Time')
 plt.ylabel('Sensor Data')
 plt.title('Real-time Sensor Data')
-plt.grid(True)
+plt.grid(True) """
 
 window.protocol("WM_DELETE_WINDOW", ExitProgram)
 window.mainloop()
+
+while True:
+    print(get_sensor_data)
