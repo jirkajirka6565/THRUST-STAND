@@ -1,6 +1,6 @@
 {
     "board": "arduino:avr:uno",
     "programmer": "avrisp",
-    "sketch": "myBlink/myBlink.ino",
-    "port": "/dev/ttyACM0"
+    "sketch": "hx711-test\\hx711-test.ino",
+    "port": "COM7"
 }
