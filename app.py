@@ -1,6 +1,10 @@
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
+import tkinter as tk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import arduinoSerialConnect
+import graphs
 
 class RealTimeGraph:
     def __init__(self):
@@ -43,3 +47,23 @@ class RealTimeGraph:
         return self.fig
 
 
+class RealTimeGraphApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Real-Time Graph with Dynamic Limits")
+
+        # Create graph instance
+        self.graph = RealTimeGraph()
+
+        # Embed the plot into Tkinter
+        self.canvas = FigureCanvasTkAgg(self.graph.start_animation(), master=self.root)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=1)
+
+    def run(self):
+        self.root.mainloop()
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = RealTimeGraphApp(root)
+    app.run()
