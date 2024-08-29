@@ -41,5 +41,8 @@ class RealTimeGraph:
             interval=50
         )
         return self.fig
+    
+
+
 
 
