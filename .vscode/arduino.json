@@ -1,6 +1,6 @@
 {
     "board": "arduino:avr:uno",
     "programmer": "avrisp",
-    "sketch": "hx711-test\\hx711-test.ino",
+    "sketch": "hx711-test/hx711-test.ino",
     "port": "COM7"
 }
