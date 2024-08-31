@@ -1,48 +1,51 @@
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-import numpy as np
+import dearpygui.dearpygui as dpg
+from math import sin
 
-class RealTimeGraph:
-    def __init__(self):
-        # Create a figure and axis
-        self.fig, self.ax = plt.subplots()
+dpg.create_context()
 
-        # Initial limits
-        self.ax.set_xlim(0, 2*np.pi)
-        self.ax.set_ylim(-1, 1)
+sindatax = []
+sindatay = []
+for i in range(0, 100):
+    sindatax.append(i / 100)
+    sindatay.append(0.5 + 0.5 * sin(50 * i / 100))
+sindatay2 = []
+for i in range(0, 100):
+    sindatay2.append(2 + 0.5 * sin(50 * i / 100))
 
-        # Line object to update
-        self.line, = self.ax.plot([], [], lw=2)
+with dpg.window(label="Tutorial", width=900, height=200, no_move=True, no_resize=True, no_title_bar=True, no_close=True):
+    # create a theme for the plot
+    with dpg.theme(tag="plot_theme"):
+        with dpg.theme_component(dpg.mvStemSeries):
+            dpg.add_theme_color(dpg.mvPlotCol_Line, (150, 255, 0), category=dpg.mvThemeCat_Plots)
+            dpg.add_theme_style(dpg.mvPlotStyleVar_Marker, dpg.mvPlotMarker_Diamond, category=dpg.mvThemeCat_Plots)
+            dpg.add_theme_style(dpg.mvPlotStyleVar_MarkerSize, 7, category=dpg.mvThemeCat_Plots)
 
-    def init_graph(self):
-        self.line.set_data([], [])
-        return self.line,
+        with dpg.theme_component(dpg.mvScatterSeries):
+            dpg.add_theme_color(dpg.mvPlotCol_Line, (60, 150, 200), category=dpg.mvThemeCat_Plots)
+            dpg.add_theme_style(dpg.mvPlotStyleVar_Marker, dpg.mvPlotMarker_Square, category=dpg.mvThemeCat_Plots)
+            dpg.add_theme_style(dpg.mvPlotStyleVar_MarkerSize, 4, category=dpg.mvThemeCat_Plots)
 
-    def update_graph(self, frame):
-        x = np.linspace(0, 2*np.pi, 1000)
-        y = np.sin(x + 0.1 * frame)
+    # create plot
+    with dpg.plot(tag="plot", label="Line Series", height=-1, width=-1):
 
-        # Update line data
-        self.line.set_data(x, y)
+        # optionally create legend
+        dpg.add_plot_legend()
 
-        # Dynamic Y limits
-        ymin = np.min(y) - 0.1  # Adding a small buffer
-        ymax = np.max(y) + 0.1
-        self.ax.set_ylim(ymin, ymax)
+        # REQUIRED: create x and y axes
+        dpg.add_plot_axis(dpg.mvXAxis, label="x")
+        dpg.add_plot_axis(dpg.mvYAxis, label="y", tag="yaxis")
 
-        return self.line,
+        # series belong to a y axis
+        dpg.add_stem_series(sindatax, sindatay, label="0.5 + 0.5 * sin(x)", parent="yaxis", tag="series_data")
+        dpg.add_scatter_series(sindatax, sindatay2, label="2 + 0.5 * sin(x)", parent="yaxis", tag="series_data2")
 
-    def start_animation(self):
-        self.ani = animation.FuncAnimation(
-            self.fig, 
-            self.update_graph, 
-            init_func=self.init_graph, 
-            blit=True, 
-            interval=50
-        )
-        return self.fig
-    
+        # apply theme to series
+        dpg.bind_item_theme("series_data", "plot_theme")
+        dpg.bind_item_theme("series_data2", "plot_theme")
 
-
-
-
+dpg.create_viewport(title='Custom Title')
+dpg.maximize_viewport()
+dpg.setup_dearpygui()
+dpg.show_viewport()
+dpg.start_dearpygui()
+dpg.destroy_context()
