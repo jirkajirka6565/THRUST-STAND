@@ -1,110 +1,129 @@
-import tkinter as tk
-from tkinter import ttk
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-import numpy as np
+import dearpygui.dearpygui as dpg
 import time
+import collections
+import math
+import threading
 
-# Create the main window
-root = tk.Tk()
-root.title("Simple Tkinter App")
+# Create context and viewport
+dpg.create_context()
+dpg.create_viewport(title='Graphing app', width=1366, height=768)
 
-# Create a label
-label = tk.Label(root, text="Graphs", font=("Helvetica", 24))
-label.pack(pady=10)
+nsamples = 100
 
-# Create a container frame for the two subframes
-container = tk.Frame(root)
-container.pack(fill=tk.BOTH, expand=True)
+global data_y
+global data_x
+# Can use collections if you only need the last 100 samples
+data_y = collections.deque([0.0, 0.0],maxlen=nsamples)
+data_x = collections.deque([0.0, 0.0],maxlen=nsamples)
 
-# Create the left frame for the matplotlib plot
-left_frame = tk.Frame(container)
-left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+data_y = [0.0] * nsamples
+data_x = [0.0] * nsamples
 
-graph_frame = tk.Frame(left_frame)
-graph_frame.pack(fill=tk.BOTH, expand=True)
+def position_windows():
+    # Get viewport dimensions
+    viewport_width = dpg.get_viewport_width()
+    viewport_height = dpg.get_viewport_height()
 
-middle_frame = tk.Frame(container)
-middle_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10)
+    # Define the size of the windows
+    window1_width = 1000
+    window1_height = dpg.get_viewport_height()
+    window2_width = dpg.get_viewport_width() - window1_width
+    window2_height = dpg.get_viewport_height()
 
-# Create the right frame for the option buttons
-right_frame = tk.Frame(container)
-right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+    # Set position for the first window
+    pos_x_window1 = 0
+    pos_y_window1 = 0
 
-# Matplotlib figure and axis
-fig, ax = plt.subplots()
-fig.set_size_inches(8, 3)
+    # Position the first window
+    dpg.set_item_pos("window1", [pos_x_window1, pos_y_window1])
+    dpg.set_item_width("window1", window1_width)
+    dpg.set_item_height("window1", window1_height)
 
-fig2, ax2 = plt.subplots()
-fig2.set_size_inches(8, 3)
+    # Position the second window to the right of the first window
+    pos_x_window2 = pos_x_window1 + window1_width
+    pos_y_window2 = pos_y_window1
 
-# Initialize variables to store data points
-x_data = []
-y_data = []
+    # Ensure the second window fits within the viewport
+    if pos_x_window2 + window2_width > viewport_width:
+        pos_x_window2 = viewport_width - window2_width
 
-# Function to update the plot in real-time
-def animate(i):
-    current_time = time.time()
+    dpg.set_item_pos("window2", [pos_x_window2, pos_y_window2])
+    dpg.set_item_width("window2", window2_width)
+    dpg.set_item_height("window2", window2_height)
+
+
+with dpg.window(label='Thrust stand data', no_resize=True, tag="window1", no_close=True, no_collapse=True, no_move=True, no_title_bar=True):
+    dpg.add_text('Graphs:', )
     
-    # Add new data point
-    x_data.append(current_time - start_time)
-    y_data.append(np.sin(x_data[-1]))
+    ######################################################
+    #Windows for graphs
+    with dpg.child_window(label="Child Window", width=900, height=200):
+        with dpg.plot(label="Real-Time Data", height=-1, width=-1):
+            dpg.add_plot_legend()
 
-    # Clear the axis and plot updated data
-    ax.clear()
-    ax.plot(x_data, y_data)
-
-    # Set axis labels
-    ax.set_xlabel("Time (s)")
-    ax.set_ylabel("Amplitude")
-
-    # Set dynamic axis limits
-    ax.set_xlim(max(0, x_data[-1] - 10), x_data[-1] + 1)  # Show last 10 seconds
-    ax.set_ylim(min(y_data) - 0.1, max(y_data) + 0.1)
-
-    x_data2 = np.linspace(0, 2 * np.pi, 100)
-    y_data2 = np.cos(x_data2)
-    ax2.clear()
-    ax2.plot(x_data2, y_data2)
-    ax2.set_xlabel("Angle (radians)")
-    ax2.set_ylabel("Cosine")
+        # REQUIRED: create x and y axes, set to auto scale.
+            x_axis = dpg.add_plot_axis(dpg.mvXAxis, label='x', tag='x_axis')
+            y_axis = dpg.add_plot_axis(dpg.mvYAxis, label='y', tag='y_axis')
 
 
-    data_display.config(text=f"Latest Time: {x_data[-1]:.2f}s\nLatest Amplitude: {y_data[-1]:.2f}")
-    data_display_2.config(text=f"Graph 2 - Angle: {x_data2[-1]:.2f} rad\nCosine: {y_data2[-1]:.2f}")
+        # series belong to a y axis. Note the tag name is used in the update
+        # function update_data
+            dpg.add_line_series(x=list(data_x),y=list(data_y), 
+                            label='Temp', parent='y_axis', 
+                            tag='series_tag')
 
-# Store the start time to calculate elapsed time
-start_time = time.time()
+    with dpg.child_window(label="Child Window", width=900, height=200):
+        dpg.add_text("This is a graph window.")
 
-# Create the canvas for the matplotlib plot
-canvas = FigureCanvasTkAgg(fig, master=left_frame)
-canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+    with dpg.child_window(label="Child Window", width=900, height=200):
+        dpg.add_text("This is a graph window.")
 
-canvas2 = FigureCanvasTkAgg(fig2, master=left_frame)
-canvas2.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+    with dpg.child_window(label="Child Window", width=900, height=200):
+        dpg.add_text("This is a graph window.")
 
-canvas.get_tk_widget().pack(in_=graph_frame, side=tk.TOP, fill=tk.BOTH, expand=True)
-canvas2.get_tk_widget().pack(in_=graph_frame, side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+#####################################################
+    #window for settings
+with dpg.window(label='Settings', tag="window2", no_resize=True, no_close=True, no_collapse=True, no_move=True, no_title_bar=True):
+    dpg.add_text('Settings:', )
 
-# Animation for real-time updates
-ani = animation.FuncAnimation(fig, animate, interval=100, save_count=100)
 
-data_display = tk.Label(middle_frame, text="Latest Time: 0.00s\nLatest Amplitude: 0.00", font=("Helvetica", 14))
-data_display.pack(pady=10)
 
-data_display_2 = tk.Label(middle_frame, text="Graph 2 - Angle: 0.00 rad\nCosine: 0.00", font=("Helvetica", 14))
-data_display_2.pack(pady=10, anchor=tk.W)
+# Position the windows
+position_windows()
 
-# Option buttons in the right frame
-button1 = ttk.Button(right_frame, text="Option 1")
-button1.pack(pady=10, padx=10)
+# Set the callback to reposition the windows when the viewport is resized
+dpg.set_viewport_resize_callback(position_windows)
 
-button2 = ttk.Button(right_frame, text="Option 2")
-button2.pack(pady=10, padx=10)
+def update_data():
+    sample = 1
+    t0 = time.time()
+    frequency=1.0
+    while True:
 
-button3 = ttk.Button(right_frame, text="Option 3")
-button3.pack(pady=10, padx=10)
+        # Get new data sample. Note we need both x and y values
+        # if we want a meaningful axis unit.
+        t = time.time() - t0
+        y = math.sin(2.0 * math.pi * frequency * t)
+        data_x.append(t)
+        data_y.append(y)
+        
+        #set the series x and y to the last nsamples
+        dpg.set_value('series_tag', [list(data_x[-nsamples:]), list(data_y[-nsamples:])])          
+        dpg.fit_axis_data('x_axis')
+        dpg.fit_axis_data('y_axis')
+        
+        time.sleep(0.01)
+        sample=sample+1
 
-# Start the Tkinter event loop
-root.mainloop()
+
+
+# Start Dear PyGui
+dpg.setup_dearpygui()
+dpg.show_viewport()
+
+thread = threading.Thread(target=update_data)
+thread.start()
+
+dpg.start_dearpygui()
+
+dpg.destroy_context()

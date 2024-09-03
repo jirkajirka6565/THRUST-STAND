@@ -1,51 +1,74 @@
 import dearpygui.dearpygui as dpg
-from math import sin
+import math
+import time
+import collections
+import threading
+import pdb
+
+nsamples = 100
+
+global data_y
+global data_x
+# Can use collections if you only need the last 100 samples
+data_y = collections.deque([0.0, 0.0],maxlen=nsamples)
+data_x = collections.deque([0.0, 0.0],maxlen=nsamples)
+
+# Use a list if you need all the data. 
+# Empty list of nsamples should exist at the beginning.
+# Theres a cleaner way to do this probably.
+data_y = [0.0] * nsamples
+data_x = [0.0] * nsamples
+
+def update_data():
+    sample = 1
+    t0 = time.time()
+    frequency=1.0
+    while True:
+
+        # Get new data sample. Note we need both x and y values
+        # if we want a meaningful axis unit.
+        t = time.time() - t0
+        y = math.sin(2.0 * math.pi * frequency * t)
+        data_x.append(t)
+        data_y.append(y)
+        
+        #set the series x and y to the last nsamples
+        dpg.set_value('series_tag', [list(data_x[-nsamples:]), list(data_y[-nsamples:])])          
+        dpg.fit_axis_data('x_axis')
+        dpg.fit_axis_data('y_axis')
+        
+        time.sleep(0.01)
+        sample=sample+1
+           
+
 
 dpg.create_context()
+with dpg.window(label='Tutorial', tag='win',width=800, height=600):
 
-sindatax = []
-sindatay = []
-for i in range(0, 100):
-    sindatax.append(i / 100)
-    sindatay.append(0.5 + 0.5 * sin(50 * i / 100))
-sindatay2 = []
-for i in range(0, 100):
-    sindatay2.append(2 + 0.5 * sin(50 * i / 100))
-
-with dpg.window(label="Tutorial", width=900, height=200, no_move=True, no_resize=True, no_title_bar=True, no_close=True):
-    # create a theme for the plot
-    with dpg.theme(tag="plot_theme"):
-        with dpg.theme_component(dpg.mvStemSeries):
-            dpg.add_theme_color(dpg.mvPlotCol_Line, (150, 255, 0), category=dpg.mvThemeCat_Plots)
-            dpg.add_theme_style(dpg.mvPlotStyleVar_Marker, dpg.mvPlotMarker_Diamond, category=dpg.mvThemeCat_Plots)
-            dpg.add_theme_style(dpg.mvPlotStyleVar_MarkerSize, 7, category=dpg.mvThemeCat_Plots)
-
-        with dpg.theme_component(dpg.mvScatterSeries):
-            dpg.add_theme_color(dpg.mvPlotCol_Line, (60, 150, 200), category=dpg.mvThemeCat_Plots)
-            dpg.add_theme_style(dpg.mvPlotStyleVar_Marker, dpg.mvPlotMarker_Square, category=dpg.mvThemeCat_Plots)
-            dpg.add_theme_style(dpg.mvPlotStyleVar_MarkerSize, 4, category=dpg.mvThemeCat_Plots)
-
-    # create plot
-    with dpg.plot(tag="plot", label="Line Series", height=-1, width=-1):
-
+    with dpg.plot(label='Line Series', height=-1, width=-1):
         # optionally create legend
         dpg.add_plot_legend()
 
-        # REQUIRED: create x and y axes
-        dpg.add_plot_axis(dpg.mvXAxis, label="x")
-        dpg.add_plot_axis(dpg.mvYAxis, label="y", tag="yaxis")
+        # REQUIRED: create x and y axes, set to auto scale.
+        x_axis = dpg.add_plot_axis(dpg.mvXAxis, label='x', tag='x_axis')
+        y_axis = dpg.add_plot_axis(dpg.mvYAxis, label='y', tag='y_axis')
 
-        # series belong to a y axis
-        dpg.add_stem_series(sindatax, sindatay, label="0.5 + 0.5 * sin(x)", parent="yaxis", tag="series_data")
-        dpg.add_scatter_series(sindatax, sindatay2, label="2 + 0.5 * sin(x)", parent="yaxis", tag="series_data2")
 
-        # apply theme to series
-        dpg.bind_item_theme("series_data", "plot_theme")
-        dpg.bind_item_theme("series_data2", "plot_theme")
+        # series belong to a y axis. Note the tag name is used in the update
+        # function update_data
+        dpg.add_line_series(x=list(data_x),y=list(data_y), 
+                            label='Temp', parent='y_axis', 
+                            tag='series_tag')
+        
+            
+                            
+dpg.create_viewport(title='Custom Title', width=850, height=640)
 
-dpg.create_viewport(title='Custom Title')
-dpg.maximize_viewport()
 dpg.setup_dearpygui()
 dpg.show_viewport()
+
+thread = threading.Thread(target=update_data)
+thread.start()
 dpg.start_dearpygui()
+
 dpg.destroy_context()
