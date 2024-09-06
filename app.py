@@ -3,12 +3,14 @@ import time
 import collections
 import math
 import threading
+import arduinoSerialConnect
+
 
 # Create context and viewport
 dpg.create_context()
 dpg.create_viewport(title='Graphing app', width=1366, height=768)
 
-nsamples = 100
+nsamples = 500
 
 global data_y
 global data_x
@@ -18,6 +20,8 @@ data_x = collections.deque([0.0, 0.0],maxlen=nsamples)
 
 data_y = [0.0] * nsamples
 data_x = [0.0] * nsamples
+
+stop_event = threading.Event()
 
 def position_windows():
     # Get viewport dimensions
@@ -51,6 +55,25 @@ def position_windows():
     dpg.set_item_width("window2", window2_width)
     dpg.set_item_height("window2", window2_height)
 
+def startPlotting():
+    global thread, stop_event
+    stop_event.clear()
+    thread = threading.Thread(target=update_data)
+    thread.start()
+
+def stopPlotting():
+    global stop_event
+    stop_event.set()
+
+    global data_x, data_y
+    # Reset the data to empty lists or initial values
+    data_x = [0.0] * nsamples
+    data_y = [0.0] * nsamples
+
+    # Update the plot with cleared data
+    dpg.set_value('series_tag', [list(data_x), list(data_y)])
+    dpg.fit_axis_data('x_axis')
+    dpg.fit_axis_data('y_axis')
 
 with dpg.window(label='Thrust stand data', no_resize=True, tag="window1", no_close=True, no_collapse=True, no_move=True, no_title_bar=True):
     dpg.add_text('Graphs:', )
@@ -71,6 +94,7 @@ with dpg.window(label='Thrust stand data', no_resize=True, tag="window1", no_clo
             dpg.add_line_series(x=list(data_x),y=list(data_y), 
                             label='Temp', parent='y_axis', 
                             tag='series_tag')
+    dpg.add_text("Data: ", tag="data1_tag")
 
     with dpg.child_window(label="Child Window", width=900, height=200):
         dpg.add_text("This is a graph window.")
@@ -83,10 +107,24 @@ with dpg.window(label='Thrust stand data', no_resize=True, tag="window1", no_clo
 
 #####################################################
     #window for settings
+
+def arduino_Connect():
+    arduinoSerialConnect.Connect()
+    if(arduinoSerialConnect.arduino_connected == True):
+        dpg.set_value("arduino_status_tag", "arduino status: Connected")
+    else:
+        dpg.set_value("arduino_status_tag", "arduino status: Not connected")
+
+
 with dpg.window(label='Settings', tag="window2", no_resize=True, no_close=True, no_collapse=True, no_move=True, no_title_bar=True):
     dpg.add_text('Settings:', )
-
-
+    dpg.add_button(label="Connect to arduino", callback=arduino_Connect, width=-1, height=50)
+    dpg.add_text("arduino status: ", tag="arduino_status_tag")
+    dpg.add_spacer(height=10)
+    dpg.add_button(label="start plotting", callback=startPlotting, width=-1, height=50)
+    dpg.add_spacer(height=10)
+    dpg.add_button(label="stop plotting", width=-1, height=50, callback=stopPlotting)
+    
 
 # Position the windows
 position_windows()
@@ -95,15 +133,16 @@ position_windows()
 dpg.set_viewport_resize_callback(position_windows)
 
 def update_data():
+   
     sample = 1
     t0 = time.time()
     frequency=1.0
-    while True:
-
+    while not stop_event.is_set():
+        #print(arduinoSerialConnect.getSerialData())
         # Get new data sample. Note we need both x and y values
         # if we want a meaningful axis unit.
         t = time.time() - t0
-        y = math.sin(2.0 * math.pi * frequency * t)
+        y = math.sin(5.0 * math.pi * frequency * t + 600)
         data_x.append(t)
         data_y.append(y)
         
@@ -115,14 +154,13 @@ def update_data():
         time.sleep(0.01)
         sample=sample+1
 
+        
 
 
 # Start Dear PyGui
 dpg.setup_dearpygui()
 dpg.show_viewport()
 
-thread = threading.Thread(target=update_data)
-thread.start()
 
 dpg.start_dearpygui()
 

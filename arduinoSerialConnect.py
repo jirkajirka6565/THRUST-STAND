@@ -1,6 +1,9 @@
 import serial
 import serial.tools.list_ports
 
+arduino_connected = False
+port_not_found = False
+
 def get_ports():
     ports = serial.tools.list_ports.comports()
     return ports
@@ -34,6 +37,19 @@ def Connect():
     try:
         global arduino
         arduino = serial.Serial(port=arduino_port, baudrate=9600, timeout=1) #select arduino port
+        arduino_connected = True
         print("Arduino connected succesfully!")
     except:
         print("Port not found")
+        port_not_found = True
+
+def getSerialData():
+    
+    try:
+        return arduino.readline().decode("utf-8")
+    except:
+        return 0
+    
+def decodeSerialData(data):
+    pass
+    
