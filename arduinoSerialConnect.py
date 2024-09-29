@@ -1,7 +1,6 @@
 import serial
 import serial.tools.list_ports
 
-arduino_connected = False
 port_not_found = False
 
 def get_ports():
@@ -31,6 +30,7 @@ def FindArduino(portsFound):
     return comport
 
 def Connect():
+    global arduino_connected
     global arduino_port
     arduino_port = FindArduino(get_ports())
     print(arduino_port)
@@ -40,16 +40,32 @@ def Connect():
         arduino_connected = True
         print("Arduino connected succesfully!")
     except:
-        print("Port not found")
+        print("Port Arduino/ACM not found")
+        arduino_connected = False
         port_not_found = True
 
 def getSerialData():
     
     try:
-        return arduino.readline().decode("utf-8")
+        data = arduino.readline().decode("utf-8")
+        return data
     except:
         return 0
     
 def decodeSerialData(data):
-    pass
     
+    global LC_1, LC_2, LC_3 ##Load Cells
+    try:
+        splitData = data.split(" ")
+        LC_1 = splitData[0]
+        LC_2 = splitData[1]
+        LC_3 = splitData[2]
+        print(LC_1," ", LC_2," ", LC_3)
+        return LC_1, LC_2, LC_3
+    except:
+        print("Error decoding serial data")
+        return 0
+    
+def calibrateLoadCell(LoadCell, calibrationValue):
+    if(LoadCell == 1):
+        pass

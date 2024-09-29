@@ -110,6 +110,7 @@ with dpg.window(label='Thrust stand data', no_resize=True, tag="window1", no_clo
 
 def arduino_Connect():
     arduinoSerialConnect.Connect()
+    time.sleep(1)
     if(arduinoSerialConnect.arduino_connected == True):
         dpg.set_value("arduino_status_tag", "arduino status: Connected")
     else:
@@ -124,7 +125,14 @@ with dpg.window(label='Settings', tag="window2", no_resize=True, no_close=True, 
     dpg.add_button(label="start plotting", callback=startPlotting, width=-1, height=50)
     dpg.add_spacer(height=10)
     dpg.add_button(label="stop plotting", width=-1, height=50, callback=stopPlotting)
-    
+    dpg.add_spacer(height=10)
+    dpg.add_text("Calibration:")
+    dpg.add_input_int( tag="calibration", default_value=100, width=320)
+    dpg.add_listbox(items=["LC_1", "LC_2", "LC_3"], tag="calibration_listbox", width=320)
+    dpg.add_button(label="calibrate zero", width=-1, height=50, tag="calibrate_zero_button")
+    dpg.add_button(label="calibrate input value", width=-1, height=50, tag="calibrate_input_button")
+
+ 
 
 # Position the windows
 position_windows()
@@ -138,11 +146,19 @@ def update_data():
     t0 = time.time()
     frequency=1.0
     while not stop_event.is_set():
-        #print(arduinoSerialConnect.getSerialData())
+
+        try:
+            LC_1, LC_2, LC_3 = arduinoSerialConnect.decodeSerialData(arduinoSerialConnect.getSerialData())
+            print(LC_1," ", LC_2," ",LC_3)
+        except:
+            print("No data")
+            pass
+
         # Get new data sample. Note we need both x and y values
         # if we want a meaningful axis unit.
+        y = float(LC_1)
         t = time.time() - t0
-        y = math.sin(5.0 * math.pi * frequency * t + 600)
+        #y = math.sin(5.0 * math.pi * frequency * t + 600)
         data_x.append(t)
         data_y.append(y)
         
@@ -150,7 +166,7 @@ def update_data():
         dpg.set_value('series_tag', [list(data_x[-nsamples:]), list(data_y[-nsamples:])])          
         dpg.fit_axis_data('x_axis')
         dpg.fit_axis_data('y_axis')
-        
+
         time.sleep(0.01)
         sample=sample+1
 
