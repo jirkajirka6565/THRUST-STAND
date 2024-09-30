@@ -75,6 +75,12 @@ def stopPlotting():
     dpg.fit_axis_data('x_axis')
     dpg.fit_axis_data('y_axis')
 
+def calibrate_zero():
+    arduinoSerialConnect.calibrateLoadCellZero(dpg.get_value("calibration_listbox"))
+
+def calibrate_input():
+    arduinoSerialConnect.calibrateLoadCellInput(dpg.get_value("calibration_listbox"), dpg.get_value("calibration"))
+
 with dpg.window(label='Thrust stand data', no_resize=True, tag="window1", no_close=True, no_collapse=True, no_move=True, no_title_bar=True):
     dpg.add_text('Graphs:', )
     
@@ -129,8 +135,8 @@ with dpg.window(label='Settings', tag="window2", no_resize=True, no_close=True, 
     dpg.add_text("Calibration:")
     dpg.add_input_int( tag="calibration", default_value=100, width=320)
     dpg.add_listbox(items=["LC_1", "LC_2", "LC_3"], tag="calibration_listbox", width=320)
-    dpg.add_button(label="calibrate zero", width=-1, height=50, tag="calibrate_zero_button")
-    dpg.add_button(label="calibrate input value", width=-1, height=50, tag="calibrate_input_button")
+    dpg.add_button(label="calibrate zero", width=-1, height=50, tag="calibrate_zero_button", callback=calibrate_zero)
+    dpg.add_button(label="calibrate input value", width=-1, height=50, tag="calibrate_input_button", callback=calibrate_input)
 
  
 

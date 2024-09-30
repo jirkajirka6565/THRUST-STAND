@@ -66,6 +66,25 @@ def decodeSerialData(data):
         print("Error decoding serial data")
         return 0
     
-def calibrateLoadCell(LoadCell, calibrationValue):
-    if(LoadCell == 1):
-        pass
+def calibrateLoadCellZero(LoadCell):
+    try:
+        if(LoadCell == "LC_1"):
+            arduino.write(b"LC_1")
+        if(LoadCell == "LC_2"):
+            arduino.write(b"LC_2")
+        if(LoadCell == "LC_3"):
+            arduino.write(b"LC_3")
+    except:
+        print("Arduino not connected")
+
+def calibrateLoadCellInput(LoadCell, value):
+    try:
+        if(LoadCell == "LC_1"):
+            arduino.write(b"LC1_" + str(value).encode('utf-8'))
+        if(LoadCell == "LC_2"):
+            arduino.write(b"LC2_" + str(value).encode('utf-8'))
+        if(LoadCell == "LC_3"):
+            arduino.write(b"LC3_" + str(value).encode('utf-8'))
+    except:
+        print("Arduino not connected")
+    
