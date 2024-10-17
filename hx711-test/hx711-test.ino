@@ -20,9 +20,9 @@ float calFactor2;
 float calFactor3;
 
 String stringArray[1];
-String InputFactor1;
-String InputFactor2;
-String InputFactor3;
+float InputFactor1;
+float InputFactor2;
+float InputFactor3;
 
 float difference1;
 float difference2;
@@ -52,9 +52,9 @@ void setup() {
   scale.begin(DOUT, CLK);
   scale2.begin(DOUT2, CLK2);
   scale3.begin(DOUT3, CLK3);
-  calFactor1 = 0;
-  calFactor2 = 0;
-  calFactor3 = 0;
+  calFactor1 = 1;
+  calFactor2 = 1;
+  calFactor3 = 1;
   InputFactor1 = 1;
   InputFactor2 = 1;
   InputFactor3 = 1;
@@ -65,7 +65,7 @@ void loop() {
   {
     String data = Serial.readStringUntil('\n');   // Read the incoming data
     data.trim();
-    Serial.println(data);
+    Serial.println("Received: " + data);
     if (data == "LC_1") {
       calFactor1 = scale.get_units();  // Set calibration for scale 1
       Serial.println("Calibrated scale 1");
@@ -77,22 +77,25 @@ void loop() {
       Serial.println("Calibrated scale 3");
     }else {
       splitString(data, '_', stringArray, 2);
-      delay(1000);
-      Serial.println(stringArray[1]);
+      delay(100);
+      //Serial.println(stringArray[1]);
       if(stringArray[0] == "LC1"){
         difference1 = scale.get_units() - calFactor1;
         InputFactor1 = stringArray[1].toFloat() / difference1;
-        Serial.println(stringArray[0] + " calibrating to: " + stringArray[1]);
+        //Serial.println(stringArray[0] + " calibrating to: " + stringArray[1]);
+        delay(1000);
       }
       else if(stringArray[0] == "LC2"){
         difference2 = scale2.get_units() - calFactor2;
         InputFactor2 = stringArray[1].toFloat() / difference2;
-        Serial.println(stringArray[0] + " calibrating to: " + stringArray[1]);
+        //Serial.println(stringArray[0] + " calibrating to: " + stringArray[1]);
+        delay(1000);
       }
       else if(stringArray[0] == "LC3"){
         difference3 = scale3.get_units() - calFactor3;
         InputFactor3 = stringArray[1].toFloat() / difference3;
-        Serial.println(stringArray[0] + " calibrating to: " + stringArray[1]);
+        //Serial.println(stringArray[0] + " calibrating to: " + stringArray[1]);
+        delay(1000);
       }
     }
   }
@@ -102,16 +105,16 @@ void loop() {
   scale3.set_scale();
   
   // Get the calibrated reading from the load cell
-  weight = (scale.get_units() - calFactor1) * InputFactor1.toFloat();
+  weight = (scale.get_units() - calFactor1) * InputFactor1;
   Serial.print(weight, 2);
   Serial.print(" ");
 
-  weight2 = (scale2.get_units() - calFactor2) * InputFactor2.toFloat();
+  weight2 = (scale2.get_units() - calFactor2) * InputFactor2;
   Serial.print(weight2, 2);
   Serial.print(" ");
 
-  weight3 = (scale3.get_units() - calFactor3) * InputFactor3.toFloat();
+  weight3 = (scale3.get_units() - calFactor3) * InputFactor3;
   Serial.println(weight3, 2);
   
-  delay(500);
+  delay(200);
 }

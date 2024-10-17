@@ -1,5 +1,6 @@
 import serial
 import serial.tools.list_ports
+import time
 
 port_not_found = False
 
@@ -60,7 +61,7 @@ def decodeSerialData(data):
         LC_1 = splitData[0]
         LC_2 = splitData[1]
         LC_3 = splitData[2]
-        print(LC_1," ", LC_2," ", LC_3)
+        #print(LC_1," ", LC_2," ", LC_3)
         return LC_1, LC_2, LC_3
     except:
         print("Error decoding serial data")
@@ -70,21 +71,32 @@ def calibrateLoadCellZero(LoadCell):
     try:
         if(LoadCell == "LC_1"):
             arduino.write(b"LC_1")
-        if(LoadCell == "LC_2"):
+        elif(LoadCell == "LC_2"):
             arduino.write(b"LC_2")
-        if(LoadCell == "LC_3"):
+        elif(LoadCell == "LC_3"):
             arduino.write(b"LC_3")
     except:
         print("Arduino not connected")
 
 def calibrateLoadCellInput(LoadCell, value):
-    try:
-        if(LoadCell == "LC_1"):
-            arduino.write(b"LC1_" + str(value).encode('utf-8'))
-        if(LoadCell == "LC_2"):
-            arduino.write(b"LC2_" + str(value).encode('utf-8'))
-        if(LoadCell == "LC_3"):
-            arduino.write(b"LC3_" + str(value).encode('utf-8'))
-    except:
-        print("Arduino not connected")
+    value = str(value)
+    value.strip()
+    arduino.reset_input_buffer()
+    #try:
+    if(LoadCell == "LC_1"):
+        Data = "LC1_" + str(value)
+        arduino.write(Data.encode('utf-8'))
+        time.sleep(1)
+    elif(LoadCell == "LC_2"):          
+        Data = "LC2_" + str(value)
+        arduino.write(Data.encode('utf-8'))
+        time.sleep(1)
+    elif(LoadCell == "LC_3"):            
+        Data = "LC3_" + str(value)
+        arduino.write(Data.encode('utf-8'))
+        time.sleep(1)
+
+    arduino.reset_output_buffer()
+    #except:
+        #print("Arduino not connected")
     

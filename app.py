@@ -11,7 +11,8 @@ dpg.create_context()
 dpg.create_viewport(title='Graphing app', width=1366, height=768)
 
 nsamples = 500
-
+################################################################################################
+##LC1
 global data_y
 global data_x
 # Can use collections if you only need the last 100 samples
@@ -20,9 +21,31 @@ data_x = collections.deque([0.0, 0.0],maxlen=nsamples)
 
 data_y = [0.0] * nsamples
 data_x = [0.0] * nsamples
+################################################################################################
+##LC2
+global data_y2
+global data_x2
+# Can use collections if you only need the last 100 samples
+data_y2 = collections.deque([0.0, 0.0],maxlen=nsamples)
+data_x2 = collections.deque([0.0, 0.0],maxlen=nsamples)
+
+data_y2 = [0.0] * nsamples
+data_x2 = [0.0] * nsamples
+################################################################################################
+##LC3
+global data_y3
+global data_x3
+# Can use collections if you only need the last 100 samples
+data_y3 = collections.deque([0.0, 0.0],maxlen=nsamples)
+data_x3 = collections.deque([0.0, 0.0],maxlen=nsamples)
+
+data_y3 = [0.0] * nsamples
+data_x3 = [0.0] * nsamples
+
 
 stop_event = threading.Event()
 
+################################################################################################
 def position_windows():
     # Get viewport dimensions
     viewport_width = dpg.get_viewport_width()
@@ -65,29 +88,44 @@ def stopPlotting():
     global stop_event
     stop_event.set()
 
-    global data_x, data_y
+    global data_x, data_y, data_x2, data_y2, data_y3, data_x3
     # Reset the data to empty lists or initial values
     data_x = [0.0] * nsamples
     data_y = [0.0] * nsamples
+    data_x2 = [0.0] * nsamples
+    data_y2 = [0.0] * nsamples
+    data_y3 = [0.0] * nsamples
+    data_x3 = [0.0] * nsamples
 
     # Update the plot with cleared data
     dpg.set_value('series_tag', [list(data_x), list(data_y)])
     dpg.fit_axis_data('x_axis')
     dpg.fit_axis_data('y_axis')
+    dpg.set_value('series_tag2', [list(data_x2), list(data_y2)])
+    dpg.fit_axis_data('x_axis2')
+    dpg.fit_axis_data('y_axis2') 
+    dpg.set_value('series_tag3', [list(data_x3), list(data_y3)])
+    dpg.fit_axis_data('x_axis3')
+    dpg.fit_axis_data('y_axis3')             
+        
 
 def calibrate_zero():
     arduinoSerialConnect.calibrateLoadCellZero(dpg.get_value("calibration_listbox"))
 
+
 def calibrate_input():
+    
     arduinoSerialConnect.calibrateLoadCellInput(dpg.get_value("calibration_listbox"), dpg.get_value("calibration"))
 
+################################################################################################
 with dpg.window(label='Thrust stand data', no_resize=True, tag="window1", no_close=True, no_collapse=True, no_move=True, no_title_bar=True):
     dpg.add_text('Graphs:', )
     
     ######################################################
     #Windows for graphs
+    ##LC1
     with dpg.child_window(label="Child Window", width=900, height=200):
-        with dpg.plot(label="Real-Time Data", height=-1, width=-1):
+        with dpg.plot(label="LC-1 Data", height=-1, width=-1):
             dpg.add_plot_legend()
 
         # REQUIRED: create x and y axes, set to auto scale.
@@ -98,15 +136,43 @@ with dpg.window(label='Thrust stand data', no_resize=True, tag="window1", no_clo
         # series belong to a y axis. Note the tag name is used in the update
         # function update_data
             dpg.add_line_series(x=list(data_x),y=list(data_y), 
-                            label='Temp', parent='y_axis', 
+                            parent='y_axis', 
                             tag='series_tag')
     dpg.add_text("Data: ", tag="data1_tag")
-
+################################################################################################
+    ##LC2
     with dpg.child_window(label="Child Window", width=900, height=200):
-        dpg.add_text("This is a graph window.")
+        with dpg.plot(label="LC-2 Data", height=-1, width=-1):
+            dpg.add_plot_legend()
 
+        # REQUIRED: create x and y axes, set to auto scale.
+            x_axis2 = dpg.add_plot_axis(dpg.mvXAxis, label='x', tag='x_axis2')
+            y_axis2 = dpg.add_plot_axis(dpg.mvYAxis, label='y', tag='y_axis2')
+
+
+        # series belong to a y axis. Note the tag name is used in the update
+        # function update_data
+            dpg.add_line_series(x=list(data_x2),y=list(data_y2), 
+                             parent='y_axis2', 
+                            tag='series_tag2')
+    dpg.add_text("Data: ", tag="data2_tag")
+################################################################################################
+    ##LC3
     with dpg.child_window(label="Child Window", width=900, height=200):
-        dpg.add_text("This is a graph window.")
+        with dpg.plot(label="LC-3 Data", height=-1, width=-1):
+            dpg.add_plot_legend()
+
+        # REQUIRED: create x and y axes, set to auto scale.
+            x_axis3 = dpg.add_plot_axis(dpg.mvXAxis, label='x', tag='x_axis3')
+            y_axis3 = dpg.add_plot_axis(dpg.mvYAxis, label='y', tag='y_axis3')
+
+
+        # series belong to a y axis. Note the tag name is used in the update
+        # function update_data
+            dpg.add_line_series(x=list(data_x3),y=list(data_y3), 
+                             parent='y_axis3', 
+                            tag='series_tag3')
+    dpg.add_text("Data: ", tag="data3_tag")
 
     with dpg.child_window(label="Child Window", width=900, height=200):
         dpg.add_text("This is a graph window.")
@@ -146,6 +212,10 @@ position_windows()
 # Set the callback to reposition the windows when the viewport is resized
 dpg.set_viewport_resize_callback(position_windows)
 
+################################################################################################
+################################################################################################
+################################################################################################
+##   Update function   ##
 def update_data():
    
     sample = 1
@@ -155,16 +225,28 @@ def update_data():
 
         try:
             LC_1, LC_2, LC_3 = arduinoSerialConnect.decodeSerialData(arduinoSerialConnect.getSerialData())
-            print(LC_1," ", LC_2," ",LC_3)
+            try:
+                LC_1f = float(LC_1)
+                LC_2f = float(LC_2)
+                LC_3f = float(LC_3)
+            except:
+                LC_1f = 0
+                LC_2f = 0
+                LC_3f = 0
+            #print(LC_1," ", LC_2," ",LC_3)
         except:
             print("No data")
             pass
 
         # Get new data sample. Note we need both x and y values
         # if we want a meaningful axis unit.
-        y = float(LC_1)
+        y = LC_1f
+        y2 = LC_2f
+        y3 = LC_3f
         t = time.time() - t0
-        #y = math.sin(5.0 * math.pi * frequency * t + 600)
+        #y = math.sin(5.0 * math.pi * frequency * t + 600) ####TESTING SIN FUNCTION
+        ################################################################################################
+        ##LC1
         data_x.append(t)
         data_y.append(y)
         
@@ -172,6 +254,28 @@ def update_data():
         dpg.set_value('series_tag', [list(data_x[-nsamples:]), list(data_y[-nsamples:])])          
         dpg.fit_axis_data('x_axis')
         dpg.fit_axis_data('y_axis')
+        dpg.set_value("data1_tag", "Data: " + LC_1) #show data under graph
+        ################################################################################################
+        ##LC2
+        data_x2.append(t)
+        data_y2.append(y2)
+        
+        #set the series x and y to the last nsamples
+        dpg.set_value('series_tag2', [list(data_x2[-nsamples:]), list(data_y2[-nsamples:])])          
+        dpg.fit_axis_data('x_axis2')
+        dpg.fit_axis_data('y_axis2')
+        dpg.set_value("data2_tag", "Data: " + LC_2) #show data under graph
+        ################################################################################################
+        ##LC3
+        data_x3.append(t)
+        data_y3.append(y3)
+        
+        #set the series x and y to the last nsamples
+        dpg.set_value('series_tag3', [list(data_x3[-nsamples:]), list(data_y3[-nsamples:])])          
+        dpg.fit_axis_data('x_axis3')
+        dpg.fit_axis_data('y_axis3')
+        dpg.set_value("data3_tag", "Data: " + LC_3) #show data under graph
+        ################################################################################################
 
         time.sleep(0.01)
         sample=sample+1
