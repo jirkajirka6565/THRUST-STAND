@@ -4,6 +4,7 @@ import collections
 import math
 import threading
 import arduinoSerialConnect
+import pandas_excel
 
 
 # Create context and viewport
@@ -44,6 +45,7 @@ data_x3 = [0.0] * nsamples
 
 
 stop_event = threading.Event()
+export_event = threading.Event()
 
 ################################################################################################
 def position_windows():
@@ -116,6 +118,14 @@ def calibrate_zero():
 def calibrate_input():
     
     arduinoSerialConnect.calibrateLoadCellInput(dpg.get_value("calibration_listbox"), dpg.get_value("calibration"))
+
+def startExporting():
+    global export_event
+    if (not export_event.is_set()): export_event.set()
+
+def stopExporting():
+    global export_event
+    export_event.clear()
 
 ################################################################################################
 with dpg.window(label='Thrust stand data', no_resize=True, tag="window1", no_close=True, no_collapse=True, no_move=True, no_title_bar=True):
@@ -203,7 +213,12 @@ with dpg.window(label='Settings', tag="window2", no_resize=True, no_close=True, 
     dpg.add_listbox(items=["LC_1", "LC_2", "LC_3"], tag="calibration_listbox", width=320)
     dpg.add_button(label="calibrate zero", width=-1, height=50, tag="calibrate_zero_button", callback=calibrate_zero)
     dpg.add_button(label="calibrate input value", width=-1, height=50, tag="calibrate_input_button", callback=calibrate_input)
-
+    dpg.add_spacer(height=20)
+    dpg.add_text("Excel save file name:")
+    dpg.add_input_text(tag="excel_name", default_value="test", width=320)
+    dpg.add_button(label="Start exporting", width=-1, height=50, tag="start_exporting_button", callback=startExporting)
+    dpg.add_spacer(height=10)
+    dpg.add_button(label="Stop exporting", width=-1, height=50, tag="stop_exporting_button", callback=stopExporting)
  
 
 # Position the windows
@@ -217,7 +232,7 @@ dpg.set_viewport_resize_callback(position_windows)
 ################################################################################################
 ##   Update function   ##
 def update_data():
-   
+
     sample = 1
     t0 = time.time()
     frequency=1.0
@@ -236,7 +251,12 @@ def update_data():
             #print(LC_1," ", LC_2," ",LC_3)
         except:
             print("No data")
-            pass
+            LC_1f = 0
+            LC_2f = 0
+            LC_3f = 0
+            LC_1 = "0"
+            LC_2 = "0"
+            LC_3 = "0"
 
         # Get new data sample. Note we need both x and y values
         # if we want a meaningful axis unit.
@@ -275,6 +295,20 @@ def update_data():
         dpg.fit_axis_data('x_axis3')
         dpg.fit_axis_data('y_axis3')
         dpg.set_value("data3_tag", "Data: " + LC_3) #show data under graph
+        ################################################################################################
+        ################################################################################################
+        ################################################################################################
+        ##Exporting:
+        if(export_event.is_set()):
+            try:
+                df = pandas_excel.appendDataFrame(df, LC_1f, LC_2f, LC_3f, t)
+                pandas_excel.saveDataFrame(df, dpg.get_value("excel_name")+".xlsx")
+            except:
+                df = pandas_excel.createDataFrame()
+                time.sleep(0.01)
+                df = pandas_excel.appendDataFrame(df, LC_1f, LC_2f, LC_3f, t)
+                pandas_excel.saveDataFrame(df, dpg.get_value("excel_name")+".xlsx")
+
         ################################################################################################
 
         time.sleep(0.01)
