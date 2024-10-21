@@ -47,6 +47,8 @@ data_x3 = [0.0] * nsamples
 stop_event = threading.Event()
 export_event = threading.Event()
 
+global df
+
 ################################################################################################
 def position_windows():
     # Get viewport dimensions
@@ -120,12 +122,14 @@ def calibrate_input():
     arduinoSerialConnect.calibrateLoadCellInput(dpg.get_value("calibration_listbox"), dpg.get_value("calibration"))
 
 def startExporting():
-    global export_event
+    global export_event, df
+    df = pandas_excel.createDataFrame()
     if (not export_event.is_set()): export_event.set()
 
 def stopExporting():
-    global export_event
+    global export_event, df
     export_event.clear()
+    pandas_excel.saveDataFrame(df, dpg.get_value("excel_name")+".xlsx")
 
 ################################################################################################
 with dpg.window(label='Thrust stand data', no_resize=True, tag="window1", no_close=True, no_collapse=True, no_move=True, no_title_bar=True):
@@ -300,14 +304,15 @@ def update_data():
         ################################################################################################
         ##Exporting:
         if(export_event.is_set()):
-            try:
-                df = pandas_excel.appendDataFrame(df, LC_1f, LC_2f, LC_3f, t)
-                pandas_excel.saveDataFrame(df, dpg.get_value("excel_name")+".xlsx")
-            except:
-                df = pandas_excel.createDataFrame()
-                time.sleep(0.01)
-                df = pandas_excel.appendDataFrame(df, LC_1f, LC_2f, LC_3f, t)
-                pandas_excel.saveDataFrame(df, dpg.get_value("excel_name")+".xlsx")
+            #try:
+            global df
+            df = pandas_excel.appendDataFrame(df, LC_1f, LC_2f, LC_3f, t)
+                #pandas_excel.saveDataFrame(df, dpg.get_value("excel_name")+".xlsx")
+            #except:
+                #df = pandas_excel.createDataFrame()
+                #time.sleep(0.01)
+                #df = pandas_excel.appendDataFrame(df, LC_1f, LC_2f, LC_3f, t)
+                #pandas_excel.saveDataFrame(df, dpg.get_value("excel_name")+".xlsx")
 
         ################################################################################################
 
